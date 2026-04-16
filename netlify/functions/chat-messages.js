@@ -1,10 +1,14 @@
-// Vercel/Netlify Serverless Function: 获取AI回复
-module.exports = async (req, res) => {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
+// Netlify Serverless Function: 获取AI回复
+exports.handler = async (event, context) => {
+    if (event.httpMethod !== 'POST') {
+        return {
+            statusCode: 405,
+            body: JSON.stringify({ error: 'Method not allowed' })
+        };
     }
     
-    const { chat_id, conversation_id } = req.body;
+    const body = JSON.parse(event.body || '{}');
+    const { chat_id, conversation_id } = body;
     
     try {
         const response = await fetch(`https://api.coze.cn/v3/chat/message/list?chat_id=${chat_id}&conversation_id=${conversation_id}`, {
@@ -14,8 +18,19 @@ module.exports = async (req, res) => {
         });
         
         const data = await response.json();
-        res.status(200).json(data);
+        
+        return {
+            statusCode: 200,
+            headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            body: JSON.stringify(data)
+        };
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: error.message })
+        };
     }
 };

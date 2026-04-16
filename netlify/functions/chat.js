@@ -1,14 +1,18 @@
-// Vercel/Netlify Serverless Function: 代理扣子API请求
+// Netlify Serverless Function: 代理扣子API请求
 const COZE_API_URL = 'https://api.coze.cn/v3/chat';
 
-module.exports = async (req, res) => {
+exports.handler = async (event, context) => {
     // 只允许POST请求
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
+    if (event.httpMethod !== 'POST') {
+        return {
+            statusCode: 405,
+            body: JSON.stringify({ error: 'Method not allowed' })
+        };
     }
 
     try {
-        const { message, bot_id } = req.body;
+        const body = JSON.parse(event.body || '{}');
+        const { message, bot_id } = body;
 
         // 调用扣子API
         const response = await fetch(COZE_API_URL, {
@@ -32,8 +36,18 @@ module.exports = async (req, res) => {
 
         const data = await response.json();
         
-        res.status(200).json(data);
+        return {
+            statusCode: 200,
+            headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            body: JSON.stringify(data)
+        };
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: error.message })
+        };
     }
 };
