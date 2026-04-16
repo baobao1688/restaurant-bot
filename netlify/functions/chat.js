@@ -2,7 +2,9 @@
 const COZE_API_URL = 'https://api.coze.cn/v3/chat';
 
 exports.handler = async (event, context) => {
-    // 只允许POST请求
+    console.log('=== Chat Function Called ===');
+    console.log('Method:', event.httpMethod);
+    
     if (event.httpMethod !== 'POST') {
         return {
             statusCode: 405,
@@ -13,8 +15,13 @@ exports.handler = async (event, context) => {
     try {
         const body = JSON.parse(event.body || '{}');
         const { message, bot_id } = body;
+        
+        console.log('Message:', message);
+        console.log('Bot ID:', bot_id);
+        console.log('Token exists:', !!process.env.COZE_API_TOKEN);
 
         // 调用扣子API
+        console.log('Calling Coze API...');
         const response = await fetch(COZE_API_URL, {
             method: 'POST',
             headers: {
@@ -34,7 +41,9 @@ exports.handler = async (event, context) => {
             })
         });
 
+        console.log('Response status:', response.status);
         const data = await response.json();
+        console.log('Response data:', JSON.stringify(data));
         
         return {
             statusCode: 200,
@@ -45,6 +54,7 @@ exports.handler = async (event, context) => {
             body: JSON.stringify(data)
         };
     } catch (error) {
+        console.log('Error:', error.message);
         return {
             statusCode: 500,
             body: JSON.stringify({ error: error.message })
